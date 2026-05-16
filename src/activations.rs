@@ -1,27 +1,40 @@
-use std::f64::consts::E;
-
-#[derive(Clone)]
-pub struct Activation<'a> {
-	pub function: &'a dyn Fn(f64) -> f64,
-	pub derivative: &'a dyn Fn(f64) -> f64,
+#[derive(Clone, Copy)]
+pub enum Activation {
+	Sigmoid,
+	Relu,
+	Tanh,
+	Linear,
 }
 
-pub const IDENTITY: Activation = Activation {
-	function: &|x| x,
-	derivative: &|_| 1.0,
-};
+impl Activation {
+	pub fn apply(self, x: f64) -> f64 {
+		match self {
+			Activation::Sigmoid => 1.0 / (1.0 + (-x).exp()),
+			Activation::Relu => {
+				if x > 0.0 {
+					x
+				} else {
+					0.0
+				}
+			}
+			Activation::Tanh => x.tanh(),
+			Activation::Linear => x,
+		}
+	}
 
-pub const SIGMOID: Activation = Activation {
-	function: &|x| 1.0 / (1.0 + E.powf(-x)),
-	derivative: &|x| x * (1.0 - x),
-};
-
-pub const TANH: Activation = Activation {
-	function: &|x| x.tanh(),
-	derivative: &|x| 1.0 - (x.powi(2)),
-};
-
-pub const RELU: Activation = Activation {
-	function: &|x| x.max(0.0),
-	derivative: &|x| if x > 0.0 { 1.0 } else { 0.0 },
-};
+	// derivative - necessary to improve the loss function and model predictions
+	pub fn derivative(self, y: f64) -> f64 {
+		match self {
+			Activation::Sigmoid => y * (1.0 - y),
+			Activation::Relu => {
+				if y > 0.0 {
+					1.0
+				} else {
+					0.0
+				}
+			}
+			Activation::Tanh => 1.0 - y.powi(2),
+			Activation::Linear => 1.0,
+		}
+	}
+}

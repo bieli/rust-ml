@@ -107,14 +107,17 @@ impl Matrix {
 		res
 	}
 
-	pub fn map(&self, function: &dyn Fn(f64) -> f64) -> Matrix {
-		Matrix::from(
-			(self.data)
-				.clone()
-				.into_iter()
-				.map(|row| row.into_iter().map(|value| function(value)).collect())
-				.collect(),
-		)
+	pub fn map<F>(&self, function: F) -> Matrix
+	where
+		F: Fn(f64) -> f64,
+	{
+		let mut result = self.clone();
+		for row in &mut result.data {
+			for val in row {
+				*val = function(*val);
+			}
+		}
+		result
 	}
 
 	pub fn transpose(&self) -> Matrix {
@@ -127,6 +130,10 @@ impl Matrix {
 		}
 
 		res
+	}
+
+	pub fn get(&self, row: usize, col: usize) -> f64 {
+		self.data[row][col]
 	}
 }
 
